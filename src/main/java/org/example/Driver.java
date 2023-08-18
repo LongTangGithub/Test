@@ -1,4 +1,5 @@
 package org.example;
+import java.util.TreeSet;
 
 
 /**
@@ -16,17 +17,25 @@ package org.example;
  *
  * </p>
  *
+ * Created a TreeSet called jacketsSet to store the Jackets object "myJacket"
+ *
  */
 public class Driver {
     public static void main(String[] args){
+
+        TreeSet<Jackets> jacketsSet = new TreeSet<>();
         Jackets myJacket = new Jackets("North Face", "Black" , 299);
+        jacketsSet.add(myJacket);
+
         String filename = "jackets.csv";
 
-        Jackets.serializeJacketCSV(myJacket, filename);
-        Jackets deserializedJacket = Jackets.deserialize(filename);
+        Jackets.serializeJacketCSV(jacketsSet, filename);
+        TreeSet<Jackets> deserializedJacketsSet = Jackets.deserialize(filename);
 
-        deserializedJacket.checkEquality(myJacket);
-
+        // Checking equality of myJacket with the deserializedJacket
+        for (Jackets deserializedJacket : deserializedJacketsSet){
+            deserializedJacket.checkEquality(myJacket);
+        }
     }
 }
 

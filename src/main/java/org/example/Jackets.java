@@ -7,11 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import java.util.TreeSet;
 
 /**
  * Represent a jacket object with brand, color, and price attributes
  */
-public class Jackets implements Serializable, Comparable {
+public class Jackets implements Serializable, Comparable<Jackets> {
     private final String brand;
     private final String color;
     private final int price;
@@ -42,22 +43,25 @@ public class Jackets implements Serializable, Comparable {
     }
 
     /**
-     * This method serializes the myJacket objet into a CSV file by writing its attributes (brand,color, price) to the file
+     * serializeJacketCSV serializes a set of Jacket objects into a CSV file
      * Note:
      * <p>
      *     The price(int) is converted into a string, .append() expect a string a parameter.
      *     Everytime methods are invoked, it runs on a stack, if there's an error, it will trace the where error originated.
      * </p>
      *
-     * @param jacket The jacket object to be serialized
+     * @param jacketsSet The set of Jacket objects to be serialized
      * @param filename The name of the CSV file
      */
-    public static void serializeJacketCSV(Jackets jacket, String filename){
+    public static void serializeJacketCSV(TreeSet<Jackets> jacketsSet, String filename){
         try{
             Path filePath = Path.of(filename);
             StringBuilder serialJacketInfo = new StringBuilder();
             serialJacketInfo.append("Brand, Color, Price\n");
-            serialJacketInfo.append(jacket.getBrand() + ", " + jacket.getColor() + ", " + jacket.getPrice() + "\n");
+
+            for (Jackets jacket : jacketsSet){
+                serialJacketInfo.append(jacket.getBrand() + ", " + jacket.getColor() + ", " + jacket.getPrice() + "\n");
+            }
 
             // The StandardOpenOption.CREATE and StandardOpenOption.WRITE options are used to create the file if it doesn't exist and overwrite its contents if it does.
             Files.writeString(filePath, serialJacketInfo.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -65,11 +69,10 @@ public class Jackets implements Serializable, Comparable {
         }catch (IOException e){
             e.printStackTrace();
         }
-        jacket.prettyPrint("Serialized");
     }
 
     /**
-     * This method the CSV file, extract the values and creates a new Jacket object with the extracted values
+     * The deserialized method deserializes a CSV file, extract the values and creates a new TreeSet of JAcket objects
      *
      * Note:
      * <p>
@@ -80,28 +83,25 @@ public class Jackets implements Serializable, Comparable {
      * </p>
      *
      * @param filename The name of the CSV file
-     * @return The deserialized Jacket object, or null if deserialization is not successful
+     * @return The deserialized TreeSet of Jacket objects, or an empty set if deserialization is not successful
      */
-    public static Jackets deserialize(String filename){
-
-        Jackets jacket = null;
+    public static TreeSet<Jackets> deserialize(String filename){
+        TreeSet<Jackets> jacketsSet = new TreeSet<>();
         try{
             Path filePath = Path.of(filename);
-
             String fileContent = Files.readString(filePath, StandardCharsets.UTF_8);
 
 
             String[] lines = fileContent.split("\\r?\\n");     // Split the content into lines
 
-            if(lines.length >  1){                                  // Check if one line exists
-                String[] values = lines[1].split(",");        // Extract the values from the second line (skipping the header)
+            for(int i = 1; i < lines.length; i++){                                  // Check if one line exists
+                String[] values = lines[i].split(",");        // Extract the values from the second line (skipping the header)
                 if(values.length == 3){                             // if the array length is 3 [Brand, Color, Price]
                     String brand = values[0].trim();
                     String color = values[1].trim();
                     int price = Integer.parseInt(values[2].trim());  // the parseInt doesn't know how to parse a space
 
-
-                    jacket = new Jackets(brand, color, price);      // creating a new jacket object with the extracted values and assign to it
+                    jacketsSet.add(new Jackets(brand, color, price));      // creating a new jacket object with the extracted values and assign to it
                 }
             }
         }catch(IOException e ){
@@ -110,9 +110,10 @@ public class Jackets implements Serializable, Comparable {
             System.out.println("Invalid price value in the CSV file. Check the formatting.");
             e.printStackTrace();
         }
+
         System.out.println("Jacket is deserialized from " + filename);
-        jacket.prettyPrint("Deserialized");
-        return jacket;
+//        jacket.prettyPrint("Deserialized");
+        return jacketsSet;
     }
 
     /**
@@ -162,15 +163,21 @@ public class Jackets implements Serializable, Comparable {
     }
 
     /**
-     * @return The hash code value for the jacket object
+     * The compareTo method compares the price attribute of this Jacket object with the price attribute of another
+     * Jacket object
+     *
+     * <p>
+     *     Using Integer.compare() simplifies the code instead of writing if-else statements. It takes two int values as
+     *     arguments and returns a negative value if the first value is smaller, positive value if the first value is
+     *     larger, and 0 if the values are equal
+     * </p>
+     *
+     * @param otherJacket the object to be compared.
+     * @return A negative integer, zero, or a positive integer as this jacket is less than, equal to, or greater
+     *         than the specified jacket
      */
     @Override
-    public int hashCode() {
-        return Objects.hash(brand, color, price);
-    }
-
-    @Override
-    public int compareTo(Object o) {
-        return 0;
+    public int compareTo(Jackets otherJacket) {
+        return Integer.compare(this.price, otherJacket.price);
     }
 }

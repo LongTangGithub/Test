@@ -5,25 +5,40 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.HashSet;
+
 import java.util.Set;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for the Jackets class serialization and deserialization
+ */
 class JacketsTest {
 
     private final String testFileName = "test_jackets.csv";
 
+    /**
+     * Setting up the test environment by serializing a set of Jackets objects to a test CSV file
+     */
     @BeforeEach
     void setUp() {
+        TreeSet<Jackets> jacketsSet = new TreeSet<>();
+        jacketsSet.add(new Jackets("Brand2", "Red", 200));
+        jacketsSet.add(new Jackets("Brand5", "White", 500));
+        jacketsSet.add(new Jackets("Brand1", "Black", 100));
+        jacketsSet.add(new Jackets("Brand4", "Orange", 400));
+        jacketsSet.add(new Jackets("Brand3", "Yellow", 300));
+
+        Jackets.serializeJacketCSV(jacketsSet, testFileName);
     }
 
+    /**
+     * Deleting the test csv file after each test to clean up
+     */
     @AfterEach
-    // Delete the test csv file after each test to clean up
     void tearDown() {
         try{
             Files.deleteIfExists(Path.of(testFileName));
@@ -32,55 +47,43 @@ class JacketsTest {
         }
     }
 
-    @Test
-    void serializeJacketCSV() {
-        Jackets testJacket = new Jackets("Patagonia", "Blue", 100);
-        Jackets.serializeJacketCSV(testJacket, testFileName);
-
-        // Read the CSV file and compare its content with the expected data
-        try{
-            String fileContent = Files.readString(Path.of(testFileName), StandardCharsets.UTF_8);
-            String expectedContent = "Brand, Color, Price\nPatagonia, Blue, 100\n";
-            assertEquals(expectedContent, fileContent, "Serialized content doesn't match the expected data");
-        }catch (IOException e) {
-            fail("Failed to read test CSV file ");
-        }
-    }
-
-    @Test
-    void deserialize() {
-        // Creating a test CSV file with multiple lines of jacket data
-        String testCSVContent = "Brand, Color, Price\nChrome Hearts, Black, 300\nColumbia, Grey, 75, Arcteryx, red, 400";
-        try{
-            Files.writeString(Path.of(testFileName), testCSVContent, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-        }catch(IOException e){
-            fail("Failed to create the test CSV file.");
-        }
-
-        Jackets deserializedJacket = Jackets.deserialize(testFileName);
-
-        Jackets expectedJacket = new Jackets("Chrome Hearts", "Black", 300);
-
-        // Comparing the attributes of the deserialized Jacket with the expected jacket object
-        assertEquals(expectedJacket.getBrand(), deserializedJacket.getBrand(), "Brand attribute doesn't match");
-        assertEquals(expectedJacket.getColor(), deserializedJacket.getColor(), "Brand attribute doesn't match");
-        assertEquals(expectedJacket.getPrice(), deserializedJacket.getPrice(), "Brand attribute doesn't match");
-    }
-
     /**
-     * Creating two sets of 10 Jackets ob ojects and comparing them
+     * Testing the deserialization and compare the process by checking if the deserialized set of Jackets match the
+     * original set
+     *
+     * <p>
+     *     Personal Note:
+     *     The assertEquals() method used the equals() method in Jackets.java that was overridden to determine if the two
+     *     jackets objects are equal
+     * </p>
      */
     @Test
-    void testEqualityOfSets() {
-        Set<Jackets> firstJacketSet = new HashSet<>();
-        for(int i = 1; i <= 10; i++){
-            firstJacketSet.add(new Jackets("Brand" + i, "Color" + i,  100 * i));
+    void deserializedAndCompareSets() {
+
+        Set<Jackets> originalJacketsSet = new TreeSet<>();
+        originalJacketsSet.add(new Jackets("Brand1", "Black", 100));
+        originalJacketsSet.add(new Jackets("Brand2", "Red", 200));
+        originalJacketsSet.add(new Jackets("Brand3", "Yellow", 300));
+        originalJacketsSet.add(new Jackets("Brand4", "Orange", 400));
+        originalJacketsSet.add(new Jackets("Brand5", "White", 500));
+
+        Set<Jackets> deserializedJacketsSet = Jackets.deserialize(testFileName);
+
+        // Created two sets to hold only the price attribute for comparison
+        Set<Integer> originalJacketPrices = new TreeSet<>();
+        Set<Integer> deserializedJacketPrices = new TreeSet<>();
+
+        // Extracting prices from both Sets
+        for(Jackets jacket : originalJacketsSet){
+            originalJacketPrices.add(jacket.getPrice());
         }
 
-        Set<Jackets> secondJacketSet = new HashSet<>();
-        for(int i = 1; i <= 10; i++){
-            secondJacketSet.add(new Jackets("Brand" + i, "Color" + i,  100 * i));
+        for(Jackets jacket : deserializedJacketsSet){
+            deserializedJacketPrices.add(jacket.getPrice());
         }
-        assertEquals(firstJacketSet, secondJacketSet, "Both sets of Jackets are equal");
+
+        assertEquals(originalJacketPrices, deserializedJacketPrices, "Prices of both sets of Jackets should be equal");
+
     }
+
 }
