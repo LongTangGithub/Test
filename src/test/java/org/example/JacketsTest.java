@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.io.File;
 import java.nio.file.Path;
 
 import java.util.Set;
@@ -19,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class JacketsTest {
 
     private final String testFileName = "test_jackets.csv";
+    private final String xmlTestFileName = "test_jackets.xml";
+
 
     /**
      * Setting up the test environment by serializing a set of Jackets objects to a test CSV file
@@ -59,7 +62,6 @@ class JacketsTest {
      */
     @Test
     void deserializedAndCompareSets() {
-
         Set<Jackets> originalJacketsSet = new TreeSet<>();
         originalJacketsSet.add(new Jackets("Brand1", "Black", 100));
         originalJacketsSet.add(new Jackets("Brand2", "Red", 200));
@@ -69,21 +71,24 @@ class JacketsTest {
 
         Set<Jackets> deserializedJacketsSet = Jackets.deserialize(testFileName);
 
-        // Created two sets to hold only the price attribute for comparison
-        Set<Integer> originalJacketPrices = new TreeSet<>();
-        Set<Integer> deserializedJacketPrices = new TreeSet<>();
+        assertEquals(originalJacketsSet, deserializedJacketsSet, "Prices of both sets of Jackets should be equal");
 
-        // Extracting prices from both Sets
-        for(Jackets jacket : originalJacketsSet){
-            originalJacketPrices.add(jacket.getPrice());
-        }
+    }
 
-        for(Jackets jacket : deserializedJacketsSet){
-            deserializedJacketPrices.add(jacket.getPrice());
-        }
+    @Test
+    void serializeJacketXMLAndDeserialize() {
+        TreeSet<Jackets> originalJacketsSet = new TreeSet<>();
+        originalJacketsSet.add(new Jackets("Brand1", "Black", 100));
+        originalJacketsSet.add(new Jackets("Brand2", "Red", 200));
 
-        assertEquals(originalJacketPrices, deserializedJacketPrices, "Prices of both sets of Jackets should be equal");
+        Jackets.serializeJacketXML(originalJacketsSet, xmlTestFileName);
+        TreeSet<Jackets> deserializedJacketsSet = Jackets.deserializedJacketXML(xmlTestFileName);
 
+        assertEquals(originalJacketsSet, deserializedJacketsSet, "Sets should be equal after XML serialization and deserialization");
+
+        // Clean up: Delete the test XML file
+        File xmlFile = new File(xmlTestFileName);
+        assertTrue(xmlFile.delete(), "Test XML file should be deleted");
     }
 
 }

@@ -1,5 +1,10 @@
 package org.example;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -92,16 +97,16 @@ public class Jackets implements Serializable, Comparable<Jackets> {
             String fileContent = Files.readString(filePath, StandardCharsets.UTF_8);
 
 
-            String[] lines = fileContent.split("\\r?\\n");     // Split the content into lines
+            String[] lines = fileContent.split("\\r?\\n");                 // Split the content into lines
 
-            for(int i = 1; i < lines.length; i++){                                  // Check if one line exists
-                String[] values = lines[i].split(",");        // Extract the values from the second line (skipping the header)
-                if(values.length == 3){                             // if the array length is 3 [Brand, Color, Price]
+            for(int i = 1; i < lines.length; i++){                             // Check if one line exists
+                String[] values = lines[i].split(",");                  // Extract the values from the second line (skipping the header)
+                if(values.length == 3){                                      // if the array length is 3 [Brand, Color, Price]
                     String brand = values[0].trim();
                     String color = values[1].trim();
-                    int price = Integer.parseInt(values[2].trim());  // the parseInt doesn't know how to parse a space
+                    int price = Integer.parseInt(values[2].trim());         // the parseInt doesn't know how to parse a space
 
-                    jacketsSet.add(new Jackets(brand, color, price));      // creating a new jacket object with the extracted values and assign to it
+                    jacketsSet.add(new Jackets(brand, color, price));      // Add the new Jackets objects with the three attributes to the Set
                 }
             }
         }catch(IOException e ){
@@ -114,6 +119,40 @@ public class Jackets implements Serializable, Comparable<Jackets> {
         System.out.println("Jacket is deserialized from " + filename);
 //        jacket.prettyPrint("Deserialized");
         return jacketsSet;
+    }
+
+    /**
+     * Serializing a set of Jacket objects into an XML file
+     *
+     * @param jacketsSet The set of Jacket objects to be serialized into an XML file
+     * @param filename   The name of the XML file
+     */
+    public static void serializeJacketXML(TreeSet<Jackets> jacketsSet, String filename) {
+        XStream xStream = new XStream(new DomDriver());
+        try (FileOutputStream fos = new FileOutputStream(filename)) {
+            xStream.toXML(jacketsSet, fos);
+            System.out.println("Jacket Info serialized to " + filename + " (XML)");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Deserialize an XML file, extract the values, and create a new TreeSet of Jacket objects using XStream.
+     *
+     * @param filename The name of the XML file.
+     * @return The deserialized TreeSet of Jacket objects, or an empty set if deserialization is not successful.
+     */
+    public static TreeSet<Jackets> deserializedJacketXML(String filename){
+        XStream xStream = new XStream(new DomDriver());
+        try(FileInputStream fis = new FileInputStream(filename)){
+            TreeSet<Jackets> jacketsSet = (TreeSet<Jackets>) xStream.fromXML(fis);
+            System.out.println("Jacket is deserialized from " + filename + "(XML)");
+            return jacketsSet;
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new TreeSet<>();
     }
 
     /**

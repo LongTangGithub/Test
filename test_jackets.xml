@@ -1,0 +1,12 @@
+<sorted-set>
+  <org.example.Jackets>
+    <brand>Brand1</brand>
+    <color>Black</color>
+    <price>100</price>
+  </org.example.Jackets>
+  <org.example.Jackets>
+    <brand>Brand2</brand>
+    <color>Red</color>
+    <price>200</price>
+  </org.example.Jackets>
+</sorted-set>
